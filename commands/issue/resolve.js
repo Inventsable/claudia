@@ -4,7 +4,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("resolve")
     .setDescription("Resolve an open Github issue")
-    .addUserOption((option) =>
+    .addStringOption((option) =>
       option
         .setName("issue")
         .setDescription("Issue ID to resolve")

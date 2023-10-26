@@ -5,7 +5,9 @@ const path = require("node:path");
 const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
 const { token } = require("./config.json");
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
+});
 
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, "commands");
@@ -34,14 +36,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = interaction.client.commands.get(interaction.commandName);
-
   if (!command) {
     console.error(`No command matching ${interaction.commandName} was found.`);
     return;
   }
-
-  console.log(interaction);
-
+  // console.log(interaction.client);
   if (interaction.user.username !== "inventsable") {
     await interaction.reply({
       content: "Sorry, I can't take orders from you.",

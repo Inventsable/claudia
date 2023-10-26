@@ -16,4 +16,9 @@ module.exports = {
         .setDescription("The reason for resolution")
         .setRequired(false)
     ),
+  async execute(interaction) {
+    // console.log(process.env.GH_TOKEN);
+    console.log(interaction);
+    //
+  },
 };

@@ -72,7 +72,7 @@ module.exports = {
 
     const issue = {
       title: null,
-      body: body.trim(),
+      body: body.trim().replace(/^\>(\s\>)*\s?/gm, "> "),
     };
 
     if (issue && issue.body) {

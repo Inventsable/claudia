@@ -26,6 +26,22 @@ const discordLinkAndIdParser = (args) => {
   return result;
 };
 
+const closeIssue = async (repo, id) => {
+  return await octokit.request(
+    `PATCH /repos/inventsable/${repo}/issues/${id}`,
+    {
+      owner: "inventsable",
+      repo: repo,
+      issue_number: id,
+      state: "closed",
+      state_reason: "completed",
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    }
+  );
+};
+
 const commentOnIssue = async (repo, id, body) => {
   return await octokit.request(
     `POST /repos/inventsable/${repo}/issues/${id}/comments`,
@@ -55,8 +71,29 @@ const createIssue = async (repo, title, body) => {
   });
 };
 
+const listIssues = async (repo) => {
+  return await octokit.request(`GET /repos/inventsable/${repo}/issues`, {
+    owner: "inventsable",
+    repo: repo,
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+};
+
+const getUserShorthand = (message) => {
+  return `[${message.author.username}#${message.author.discriminator}${
+    message.author.username !== message.author.globalName
+      ? `(${message.author.globalName})`
+      : ""
+  }](${message.url})`;
+};
+
 module.exports = {
   discordLinkAndIdParser,
   commentOnIssue,
   createIssue,
+  closeIssue,
+  listIssues,
+  getUserShorthand,
 };

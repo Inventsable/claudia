@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
+const util = require("../../util/github");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -21,22 +22,25 @@ module.exports = {
     const issueTitle = interaction.options.getString("title");
 
     // Split the input messageId string into an array of words
-    const validReplies = utils.discordLinkAndIdParser(messageId);
+    const validReplies = util.discordLinkAndIdParser(messageId);
 
     // Initialize the body with the title
     let body = "";
 
+    let index = 0;
     for (let valid of validReplies) {
       const message = await interaction.channel.messages
         .fetch(valid)
         .catch((error) => null);
 
       if (message) {
-        await message.fetch();
+        await message.fetch().catch((error) => null);
         const messageContent = message.content;
 
+        if (index > 0) body += "\r\n\r\n----\r\n\r\n";
+
         // Add the message content to the body
-        body += messageContent + "\r\n\r\n";
+        body += "> " + messageContent + "\r\n\r\n";
 
         // Loop through message attachments and add links to the body
         if (message.attachments.size > 0) {
@@ -44,7 +48,7 @@ module.exports = {
             console.log(attachment);
             // You can format the attachment links as needed
             if (/image/i.test(attachment.contentType)) body += `!`;
-            body += `[Attachment ${key}]( ${attachment.url})\r\n`;
+            body += `> [Attachment ${key}]( ${attachment.url})\r\n`;
           }
         }
 
@@ -53,24 +57,27 @@ module.exports = {
           for (const embed of message.embeds) {
             // You can format the embeds as needed
             if (/image/i.test(embed.contentType)) body += `!`;
-            body += `[Embed: ${embed.type}](${embed.url})\r\n`;
+            body += `> [Embed: ${embed.type}](${embed.url})\r\n`;
           }
         }
 
+        // Create block quote style
+        body = body.trim().replace(/(\r\n|\r|\n)(?!>)\s?/gm, "\r\n> ");
+
         // Add a link to the original message at the end
-        body += `[Message origin](${message.url})\r\n\r\n`;
+        body += `\r\n\r\n  ▸ ${util.getUserShorthand(message)}\r\n\r\n`;
       }
+      index = index + 1;
     }
 
     const issue = {
       title: issueTitle,
-      body: body.trim(),
+      body: body.trim().replace(/^\>(\s\>)*\s?/gm, "> "),
     };
 
     if (issue && issue.body) {
       console.log(issue);
-      // console.log(issue.body.join(""));
-      const response = await utils.createIssue(
+      const response = await util.createIssue(
         "Discord-Issue-Tracker",
         issue.title,
         issue.body
@@ -79,9 +86,10 @@ module.exports = {
         `[New issue created: ${issue.title}](${response.data.html_url})`
       );
     } else {
-      await interaction.reply(
-        "Message not found. Please provide a valid message ID."
-      );
+      await interaction.reply({
+        content: "Message not found. Please provide a valid message ID.",
+        ephemeral: true,
+      });
     }
   },
 };

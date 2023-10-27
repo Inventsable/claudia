@@ -86,11 +86,31 @@ const getUserShorthand = (message) => {
     message.author.username !== message.author.globalName
       ? `(${message.author.globalName})`
       : ""
-  }](${message.url})`;
+  }](${message.url})\n`;
+};
+
+const convertDiscordReplyToBlockQuote = (content) => {
+  return `> ${content
+    .trim()
+    .split(/(\r\n|\n)/gm)
+    .join("\r\n> ")}`.replace(/\s(>\s)(?!\w)/gm, "");
+};
+
+const sanitizeFinalDiscordBlockQuote = (content) => {
+  return content
+    .replace(/\n{2,}/gm, "\n")
+    .split(/\n(?!\>)/gm)
+    .join("\n> ")
+    .replace(/\>[^\w\>-]*\>/gm, ">")
+    .replace(/>\s{2}—/gm, "\n  —")
+    .replace(/\>\s*\-{4}\s*\n/gm, "\n----\n")
+    .replace(/\s\>\s*$/, "");
 };
 
 module.exports = {
   discordLinkAndIdParser,
+  convertDiscordReplyToBlockQuote,
+  sanitizeFinalDiscordBlockQuote,
   commentOnIssue,
   createIssue,
   closeIssue,

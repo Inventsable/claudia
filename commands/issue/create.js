@@ -18,6 +18,9 @@ module.exports = {
         .setRequired(true)
     ),
   async execute(interaction) {
+    // Tell Discord that Claudia needs more than 3 seconds to prevent timeout
+    interaction.deferReply({ ephemeral: false, fetchReply: false });
+
     const messageId = interaction.options.getString("id");
     const issueTitle = interaction.options.getString("title");
 
@@ -26,7 +29,6 @@ module.exports = {
 
     // Initialize the body with the title
     let body = "";
-
     let index = 0;
     for (let valid of validReplies) {
       const message = await interaction.channel.messages
@@ -35,54 +37,56 @@ module.exports = {
 
       if (message) {
         await message.fetch().catch((error) => null);
-        const messageContent = message.content;
 
-        if (index > 0) body += "\r\n\r\n----\r\n\r\n";
+        if (index > 0) body += "\n----\n";
+
+        const messageContent = util.convertDiscordReplyToBlockQuote(
+          message.content
+        );
 
         // Add the message content to the body
-        body += "> " + messageContent + "\r\n\r\n";
-
+        body += messageContent;
         // Loop through message attachments and add links to the body
         if (message.attachments.size > 0) {
           for (const [key, attachment] of message.attachments) {
-            console.log(attachment);
+            body += "\n> ";
             // You can format the attachment links as needed
             if (/image/i.test(attachment.contentType)) body += `!`;
-            body += `> [Attachment ${key}]( ${attachment.url})\r\n`;
+            body += `[Attachment ${key}]( ${attachment.url})\r\n`;
           }
         }
 
         // Loop through message embeds and add links to the body
         if (message.embeds.length > 0) {
           for (const embed of message.embeds) {
+            body += "\n> ";
             // You can format the embeds as needed
             if (/image/i.test(embed.contentType)) body += `!`;
-            body += `> [Embed: ${embed.type}](${embed.url})\r\n`;
+            body += `[Embed: ${embed.type}](${embed.url})\r\n`;
           }
         }
-
-        // Create block quote style
-        body = body.trim().replace(/(\r\n|\r|\n)(?!>)\s?/gm, "\r\n> ");
+        body = body.trim();
 
         // Add a link to the original message at the end
-        body += `\r\n\r\n  ▸ ${util.getUserShorthand(message)}\r\n\r\n`;
+        body += `\n — ${util.getUserShorthand(message)}`;
       }
       index = index + 1;
     }
 
     const issue = {
       title: issueTitle,
-      body: body.trim().replace(/^\>(\s\>)*\s?/gm, "> "),
+      body: util.sanitizeFinalDiscordBlockQuote(body),
     };
 
     if (issue && issue.body) {
-      console.log(issue);
+      // Sending POST to Github to create new comment with compiled result
       const response = await util.createIssue(
         "Discord-Issue-Tracker",
         issue.title,
         issue.body
       );
-      await interaction.reply(
+      // Respond with our deferred reply, confirmation of success, and link to issue comment
+      await interaction.followUp(
         `[New issue created: ${issue.title}](${response.data.html_url})`
       );
     } else {

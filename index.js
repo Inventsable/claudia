@@ -44,10 +44,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.error(`No command matching ${interaction.commandName} was found.`);
     return;
   }
+  const publicCommands = ["download"];
   // console.log(interaction.client);
-  if (interaction.user.username !== "inventsable") {
+  if (
+    !publicCommands.includes(interaction.commandName) &&
+    interaction.user.username !== "inventsable"
+  ) {
     await interaction.reply({
-      content: "Sorry, I can't take orders from you.",
+      content: "Sorry, can't take orders from you.",
       ephemeral: true,
     });
   } else

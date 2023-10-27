@@ -6,7 +6,11 @@ const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
 const { token } = require("./config.json");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 });
 
 client.commands = new Collection();
@@ -63,6 +67,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
     }
+});
+
+client.on("messageCreate", (message) => {
+  if (message.content.toLowerCase() === "good bot" && !message.author.bot) {
+    message.react("🙏").catch(console.error);
+  } else if (/claudia/i.test(message.content)) {
+    message.react("👀");
+  } else if (
+    message.content.toLowerCase() === "bad bot" &&
+    !message.author.bot
+  ) {
+    message.react("🥺").catch(console.error);
+  }
 });
 
 // When the client is ready, run this code (only once)

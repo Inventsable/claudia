@@ -44,7 +44,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.error(`No command matching ${interaction.commandName} was found.`);
     return;
   }
-  const publicCommands = ["download"];
+  const publicCommands = ["download", "help", "install"];
   // console.log(interaction.client);
   if (
     !publicCommands.includes(interaction.commandName) &&

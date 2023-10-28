@@ -81,6 +81,40 @@ const listIssues = async (repo) => {
   });
 };
 
+const getModifiedDateFromCommit = async (repo, filePath) => {
+  // Your GitHub Personal Access Token
+  const token = "your_personal_access_token";
+
+  // GitHub API URL
+  const apiUrl = `https://api.github.com/repos/inventsable/${repo}/commits?path=${filePath}`;
+
+  // Set up headers for authentication
+  const headers = {
+    Authorization: `token ${token}`,
+    "User-Agent": "Node.js", // Set a User-Agent header to identify your application
+  };
+  try {
+    const response = await fetch(apiUrl, { headers });
+
+    if (response.status === 200) {
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const lastCommit = data[0].commit;
+        console.log(
+          `Last modified timestamp for ${filePath}: ${lastCommit.author.date}`
+        );
+      } else {
+        console.error(`No commits found for ${filePath}`);
+      }
+    } else {
+      throw new Error(`HTTP Status ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+};
+
 const getUserShorthand = (message) => {
   return `[${message.author.username}#${message.author.discriminator}${
     message.author.username !== message.author.globalName
